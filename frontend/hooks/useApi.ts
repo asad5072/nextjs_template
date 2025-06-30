@@ -14,7 +14,7 @@ export function useApi() {
 	};
 
 	// POST method
-	const post = async (endpoint: string, data: any) => {
+	const post = async (endpoint: string, data: object) => {
 		const response = await axios.post(baseURL + endpoint, data);
 		if (response.status < 200 || response.status >= 300) {
 			throw new Error(`POST ${endpoint} failed: ${response.statusText}`);
@@ -23,7 +23,7 @@ export function useApi() {
 	};
 
 	// PUT method
-	const put = async (endpoint: string, data: any) => {
+	const put = async (endpoint: string, data: object) => {
 		const response = await axios.put(baseURL + endpoint, data);
 		if (response.status < 200 || response.status >= 300) {
 			throw new Error(`PUT ${endpoint} failed: ${response.statusText}`);
