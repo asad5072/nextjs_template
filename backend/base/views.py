@@ -9,3 +9,10 @@ from .serializers import *
 class categoryListCreateView(generics.ListCreateAPIView):
     queryset = Category.objects.all()
     serializer_class = CategorySerializer
+
+
+def register(request):
+    if request.method == "POST":
+        data = request.data
+        data["username"] = data["email"]
+        serializer = UserRegistrationSerializer(data=data)
