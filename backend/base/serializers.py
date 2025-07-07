@@ -1,6 +1,8 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
 from .models import *
+from rest_framework.exceptions import ValidationError
+from django.contrib.auth.hashers import make_password
 
 
 class CategorySerializer(serializers.ModelSerializer):
@@ -8,22 +10,30 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = "__all__"
 
+
 class UserRegistrationSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
-        fields = ("email", "username", "password", "first_name", "last_name")
+        exclude = ["groups", "user_permissions"]
+        # fields = '__all__'
         extra_kwargs = {
             "password": {"write_only": True},
-            "username": {"required": False},
+            # 'username': {'read_only': True},
         }
 
+    def validate_email(self, value):
+        if User.objects.filter(email=value).exists():
+            raise ValidationError({"error": "This email is already registered."})
+        return value
+
     def create(self, validated_data):
-        user = User(
-            email=validated_data["email"],
-            username=validated_data.get("username", validated_data["email"]),
-            first_name=validated_data.get("first_name", ""),
-            last_name=validated_data.get("last_name", ""),
-        )
-        user.set_password(validated_data["password"])
-        user.save()
-        return user
+        # Hash the password
+        validated_data["password"] = make_password(validated_data["password"])
+        return User.objects.create(**validated_data)
+
+    def to_representation(self, instance):
+        """Customize the serialized output."""
+        representation = super().to_representation(instance)
+        # Remove the password field from the output
+        representation.pop("password", None)
+        return representation
