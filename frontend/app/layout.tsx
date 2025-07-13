@@ -1,10 +1,7 @@
-"use client";
-import { useState, useEffect } from "react";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Providers } from "./providers";
-import { useAuth } from "@/hooks/useAuth";
 
 const geistSans = Geist({
 	variable: "--font-geist-sans",
@@ -26,19 +23,12 @@ export default function RootLayout({
 }: Readonly<{
 	children: React.ReactNode;
 }>) {
-	const [queryClient] = useState(() => new QueryClient());
-	const { jwtLogin } = useAuth();
-
-	useEffect(() => {
-		jwtLogin();
-	}, [jwtLogin]);
-
 	return (
 		<html lang="en">
 			<body
 				className={`${geistSans.variable} ${geistMono.variable} antialiased`}
 			>
-				<Providers client={queryClient}>{children}</Providers>
+				<Providers>{children}</Providers>
 			</body>
 		</html>
 	);

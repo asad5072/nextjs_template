@@ -8,9 +8,23 @@ import { useCallback } from "react";
 
 const baseURL = process.env.NEXT_PUBLIC_BASE_URL + "/api";
 
+interface User {
+	id: string;
+	email: string;
+	username?: string;
+	user_type?: string;
+	is_superuser?: boolean;
+}
+
+interface AuthResponse {
+	access: string;
+	refresh?: string;
+	user: User;
+}
+
 interface AuthState {
-	user: any;
-	setUser: (user: any) => void;
+	user: User | null;
+	setUser: (user: User | null) => void;
 	notifs: any[];
 	setNotifs: (notifs: any[]) => void;
 }
@@ -47,8 +61,8 @@ export function useAuth() {
 			});
 
 			if (res.data) {
-				setUser(res.data);
-				Cookies.set("jwt-token", res.data.access);
+				setUser(res.data.user || res.data);
+				Cookies.set("jwt-token", res.data.access || token);
 				if (res.data.user?.username) {
 					Cookies.set("username", res.data.user.username);
 				}
@@ -57,6 +71,7 @@ export function useAuth() {
 		} catch (err: any) {
 			console.error("JWT validation error:", err);
 			Cookies.remove("jwt-token");
+			Cookies.remove("username");
 			setUser(null);
 			return false;
 		}
@@ -64,7 +79,7 @@ export function useAuth() {
 
 	const login = async (email: string, password: string) => {
 		try {
-			const res = await axios.post(
+			const res = await axios.post<AuthResponse>(
 				`${baseURL}/auth/login/`,
 				{ email, password },
 				{
@@ -75,7 +90,7 @@ export function useAuth() {
 			);
 
 			if (res.data) {
-				setUser(res.data);
+				setUser(res.data.user);
 				Cookies.set("jwt-token", res.data.access);
 				if (res.data.user?.username) {
 					Cookies.set("username", res.data.user.username);
@@ -87,9 +102,12 @@ export function useAuth() {
 					is_superuser: res.data.user.is_superuser,
 				};
 			}
-		} catch (err) {
+		} catch (err: any) {
 			console.error("Login error:", err);
-			return { loggedIn: false, error: err };
+			return {
+				loggedIn: false,
+				error: err.response?.data?.message || "Login failed",
+			};
 		}
 	};
 
